@@ -13,7 +13,7 @@ Hanwei Zhu
 
 随着人工智能的发展，人机语言交互已经成为重要的研究领域之一。Apple公司的Siri，Microsoft的Cortana，Google的Google Assistant和Amazon的Alexa等等开发的虚拟AI助手都已经投入商用并取得了巨大的成功。这都是以语音识别技术作为基石。可以想象未来基于语音识别的各种场景：对话的方式来完全地取代人工键盘输入；声控智能家居；声纹加密；在现有的技术支持下实现这些场景似乎已经指日可待。
 
-现有的研究指出传统的语音交互有以下几种缺点：第一，交互距离要近；第二，发音必须标准；第三，环境必须安静；第四，人机不能持续对话[1]。随着算力的提升和人工智能研究的发展，现有的机器学习，深度学习技术等等都能够很好地改进以上几点。这也是本次项目探索的重点和方向。
+现有的研究指出传统的语音交互具有距离近、抗干扰能力弱、不可持续等特点。随着算力的提升和人工智能研究的发展，现有的机器学习，模式识别技术等等都能够很好地改进上述缺点。这也是本次项目探索的重点和方向。
 
 本次毕业项目将实现一个简单的语音识别器：对不同的声音样本进行性别识别。该项目基于Kaggle竞赛赛题“[Gender Recognition by Voice](https://www.kaggle.com/primaryobjects/voicegender)”。根据Kaggle上竞赛举办方提供的声音数据集来搭建识别系统，能够准确地识别采集到的声音属于男性还是女性。
 
@@ -21,7 +21,7 @@ Hanwei Zhu
 
 针对语音识别问题，本次项目将采用现有的机器学习算法——尤其是监督学习来解决。对于让计算机学习如何正确辨别男性还是女性，该问题本质上属于监督学习中基本的二元分类问题：即根据输入的一系列特征输出二元标签。在给出人工标签的数据集上训练模型，通过减小和标签差距的方式来找到模型的最佳参数。
 
-我将采用在纳米学位的课程中学习到的标准数据处理流程进行实验。具体实验设计如下：
+本次项目主要参考了[1]，并结合在纳米学位的课程中学习到的标准数据处理流程进行实验。具体实验设计如下：
 
 - 数据预处理
 
@@ -78,78 +78,11 @@ Hanwei Zhu
 
 以上特征都是一段语音进过筛选后的重要信息，已经通过了R语言脚本对原始的音频进行了预处理[2]。直接从csv文件读取数据，数据集基本信息如下所示。可以看出提供的数据集比较干净，没有出现脏数据/缺失数据的情况。但是可以看出数据区间各不相同，我们需要对其进行归一化处理。
 
-```
-<class 'pandas.core.frame.DataFrame'>
-RangeIndex: 3168 entries, 0 to 3167
-Data columns (total 21 columns):
-meanfreq    3168 non-null float64
-sd          3168 non-null float64
-median      3168 non-null float64
-Q25         3168 non-null float64
-Q75         3168 non-null float64
-IQR         3168 non-null float64
-skew        3168 non-null float64
-kurt        3168 non-null float64
-sp.ent      3168 non-null float64
-sfm         3168 non-null float64
-mode        3168 non-null float64
-centroid    3168 non-null float64
-meanfun     3168 non-null float64
-minfun      3168 non-null float64
-maxfun      3168 non-null float64
-meandom     3168 non-null float64
-mindom      3168 non-null float64
-maxdom      3168 non-null float64
-dfrange     3168 non-null float64
-modindx     3168 non-null float64
-label       3168 non-null object
-dtypes: float64(20), object(1)
-memory usage: 519.8+ KB
-```
+![](/Users/hanweizhu/Desktop/udacity_project/gender_recognition_by_voice/1525359442215.jpg)
 
 通过Pandas基本统计量分析，得到的统计量如下：
 
-```
-          meanfreq           sd       median          Q25          Q75  
-count  3168.000000  3168.000000  3168.000000  3168.000000  3168.000000   
-mean      0.180907     0.057126     0.185621     0.140456     0.224765   
-std       0.029918     0.016652     0.036360     0.048680     0.023639   
-min       0.039363     0.018363     0.010975     0.000229     0.042946   
-25%       0.163662     0.041954     0.169593     0.111087     0.208747   
-50%       0.184838     0.059155     0.190032     0.140286     0.225684   
-75%       0.199146     0.067020     0.210618     0.175939     0.243660   
-max       0.251124     0.115273     0.261224     0.247347     0.273469   
-
-               IQR         skew         kurt       sp.ent          sfm  
-count  3168.000000  3168.000000  3168.000000  3168.000000  3168.000000   
-mean      0.084309     3.140168    36.568461     0.895127     0.408216   
-std       0.042783     4.240529   134.928661     0.044980     0.177521   
-min       0.014558     0.141735     2.068455     0.738651     0.036876   
-25%       0.042560     1.649569     5.669547     0.861811     0.258041   
-50%       0.094280     2.197101     8.318463     0.901767     0.396335   
-75%       0.114175     2.931694    13.648905     0.928713     0.533676   
-max       0.252225    34.725453  1309.612887     0.981997     0.842936   
-
-              mode     centroid      meanfun       minfun       maxfun  
-count  3168.000000  3168.000000  3168.000000  3168.000000  3168.000000   
-mean      0.165282     0.180907     0.142807     0.036802     0.258842   
-std       0.077203     0.029918     0.032304     0.019220     0.030077   
-min       0.000000     0.039363     0.055565     0.009775     0.103093   
-25%       0.118016     0.163662     0.116998     0.018223     0.253968   
-50%       0.186599     0.184838     0.140519     0.046110     0.271186   
-75%       0.221104     0.199146     0.169581     0.047904     0.277457   
-max       0.280000     0.251124     0.237636     0.204082     0.279114   
-
-           meandom       mindom       maxdom      dfrange      modindx  
-count  3168.000000  3168.000000  3168.000000  3168.000000  3168.000000  
-mean      0.829211     0.052647     5.047277     4.994630     0.173752  
-std       0.525205     0.063299     3.521157     3.520039     0.119454  
-min       0.007812     0.004883     0.007812     0.000000     0.000000  
-25%       0.419828     0.007812     2.070312     2.044922     0.099766  
-50%       0.765795     0.023438     4.992188     4.945312     0.139357  
-75%       1.177166     0.070312     7.007812     6.992188     0.209183  
-max       2.957682     0.458984    21.867188    21.843750     0.932374  
-```
+![](/Users/hanweizhu/Desktop/udacity_project/gender_recognition_by_voice/1525358989993.jpg)
 
 ### 探索性可视化
 
@@ -183,7 +116,7 @@ sklearn里直接提供了sklearn.linear_model.LogisticRegression模型，能够�
 
 #### 随机森林
 
-单个决策树是一种简单，直观又高效的分类方法。通过不断对数据集中的样本进行拆分，最后得到分类结果。但是决策树带来的问题是非常容易对于训练集过拟合，可以通过剪枝等手段来防止过拟合。随机森林是一种高效的ensemble learning方法。具体算法是通过bagging的方式将多个决策树集合在一起进行训练和决策。这样既能将单个决策树的预测能力集合起来，又能有效地防止训练单个决策树过拟合的问题。
+单个决策树是一种简单，直观又高效的分类方法。通过不断对数据集中的样本进行拆分，最后得到分类结果。但是决策树带来的问题是非常容易对于训练集过拟合，可以通过剪枝等手段来防止过拟合。随机森林[2]是一种高效的ensemble learning方法。具体算法是通过bagging的方式将多个决策树集合在一起进行训练和决策。这样既能将单个决策树的预测能力集合起来，又能有效地防止训练单个决策树过拟合的问题。
 
 与随机树不同，我们先对输入数据进行行采样和列采样。随后在分裂节点的时候，我们不断通过输入样本的特征进行询问（例如：meanfreq是否小于0.3？sd是否小于0.9？），最后得出是否是男性还是女性的结论。最后在预测阶段，我们集合起所有的决策树进行投票表决，通过多数投票来决定该样本的标签。
 
@@ -197,7 +130,7 @@ sklearn里也提供了sklearn.ensemble.RandomForestClassifier模型，能够自�
 
 #### XGBoost
 
-同样是对单个决策树进行emsemble，但是不同于随机森林的bagging的方式：XGBoost是gradient boosting decision tree的一种实现。通过梯度下降，正则化的方式来训练模型和控制模型复杂度。XGBoost作为一种高效的集成学习方法出现在各大数据竞赛和实际应用中，其既可以用于分类也可以用于回归问题中。
+同样是对单个决策树进行emsemble，但是不同于随机森林的bagging的方式：XGBoost是gradient boosting decision tree的一种实现[3]。通过梯度下降，正则化的方式来训练模型和控制模型复杂度。XGBoost作为一种高效的集成学习方法出现在各大数据竞赛和实际应用中，其既可以用于分类也可以用于回归问题中。
 
 主要可供调节的参数有：
 
@@ -227,7 +160,7 @@ sklearn里也提供了sklearn.ensemble.RandomForestClassifier模型，能够自�
 
 直接使用sklearn构建了逻辑回归，随机森林模型
 
-使用XGBoost官网的安装包在试验环境（Ubuntu）中进行安装编译成Python package，成功在Python环境里构建了XGBoost模型[3]。（具体安装过程见Readme）
+使用XGBoost官网的安装包在试验环境（Ubuntu）中进行安装编译成Python package，成功在Python环境里构建了XGBoost模型。（具体安装过程见Readme）
 
 最后试验中将构建函数使用K-fold（K=10）对模型进行交叉验证：将训练集拆分成9个测试子集和1个验证子集，交叉验证模型的正确性。通过K-fold分别对各个模型进行参数选择，代码如下：
 
@@ -294,14 +227,14 @@ RandomForestClassifier(bootstrap=True, class_weight=None, criterion='entropy',
 
 调整参数为：
 
-**max_depth**: 5~10;
-**n_estimators**: 10 ~ 80;
+**max_depth**: 2~10;
+**n_estimators**: 10 ~ 130;
 **learning_rate**: 0.01 ~ 0.4
 
 ```
 XGBClassifier(base_score=0.5, booster='gbtree', colsample_bylevel=1,
        colsample_bytree=1, gamma=0, learning_rate=0.3, max_delta_step=0,
-       max_depth=6, min_child_weight=1, missing=None, n_estimators=70,
+       max_depth=2, min_child_weight=1, missing=None, n_estimators=130,
        n_jobs=1, nthread=None, objective='binary:logistic', random_state=0,
        reg_alpha=0, reg_lambda=1, scale_pos_weight=1, seed=None,
        silent=True, subsample=1)
@@ -314,7 +247,7 @@ XGBClassifier(base_score=0.5, booster='gbtree', colsample_bylevel=1,
 
 |          | Logistic Regression | Random Forest Classifier | XGBoost            |
 | -------- | ------------------- | ------------------------ | ------------------ |
-| Accuracy | 0.9700315457413249  | 0.9763406940063092       | 0.9810725552050473 |
+| Accuracy | 0.9700315457413249  | 0.9763406940063092       | 0.9826498422712934 |
 
 比较看来，XGBoost效果是最好的，也和之前的预期相符。但是值得注意的是简单常见的单个逻辑回归模型也能够达到97%的准确率，已经非常接近另外两个ensemble的复杂模型。说明了模型未必一定是越复杂越优异，还要考虑到训练时间成本，硬件条件等等（逻辑回归模型训练时间远远短于其他两者）。
 
@@ -326,7 +259,7 @@ XGBClassifier(base_score=0.5, booster='gbtree', colsample_bylevel=1,
 ## V. 项目结论
 ### 结果可视化
 
-以下将XGBoost的结果可视化。
+以下讨论XGBoost最优模型的预测结果可视化。
 
 将测试集经过降维后Plot在2D平面上。圆点表示我们的模型分类正确的样本，方形表示分类错误的样本。可以看出分类错误的点比较均匀分散，没有呈现特定的趋势。
 
@@ -347,8 +280,8 @@ XGBClassifier(base_score=0.5, booster='gbtree', colsample_bylevel=1,
 ----------
 - ### Reference
 
-  [1] http://www.eepw.com.cn/article/201704/358275.htm
+  [1] Nasrabadi, N. M. (2007). Pattern recognition and machine learning. *Journal of electronic imaging*, *16*(4), 049901.
 
-  [2] http://www.primaryobjects.com/2016/06/22/identifying-the-gender-of-a-voice-using-machine-learning
+  [2] Breiman, L. (2001). Random forests. *Machine learning*, *45*(1), 5-32.
 
-  [3] http://xgboost.readthedocs.io/en/latest/
+  [3] Chen, T., & Guestrin, C. (2016, August). Xgboost: A scalable tree boosting system. In *Proceedings of the 22nd acm sigkdd international conference on knowledge discovery and data mining* (pp. 785-794). ACM.
